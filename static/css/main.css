@@ -3,10 +3,10 @@
  */
 body {
     font-family: "Roboto Condensed", Arial, sans-serif;
-    background-color: #47476b;
+    background-color: #1a0033;
     font-size: 18px;
     line-height: 1.5em;
-    color: #666;
+    color: #ffffcc;
     font-weight: 300;
 }
 hr {
@@ -28,7 +28,7 @@ span.time, span.categories {
 
 h1 {
     font-weight: normal;
-    color: #696969;
+    color: #ffcc00;
     margin-bottom: 10px;
     font-size: 25px;
 }
@@ -36,7 +36,7 @@ h1 {
 h2 {
     font-weight: normal;
     margin-bottom: 5px;
-    color: #666666;
+    color: #cbcbb3;
 }
         
 h3 {
