@@ -4,7 +4,7 @@
 body {
     font-family: monospace;
  
-    background-color: #707070;
+    background-color: #606060;
     font-size: 18px;
     line-height: 1.5em;
     color: #DBEAFF;
@@ -48,11 +48,11 @@ h3 {
 
 a, a:link, a:active {
     text-decoration: none;
-    color: #8C8C8C;
+    color: #CC756C;
 }
 
 a:hover {
-    color: #B3B3B3;
+    color: #CAE847;
     text-decoration: underline;
 }
 
@@ -146,7 +146,7 @@ div.col-sm-3 {
 div.col-sm-3 strong {
         font-size: 16px;
         color: #CC756C;
-        font-weight: normal;
+        font-weight: bold;
 }
 
 div.col-sm-3 div#about {
