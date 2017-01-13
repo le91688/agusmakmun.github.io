@@ -3,7 +3,7 @@
 		"slug": "project",
 		"name": "Protostar",
 		"image": "proto.png",
-		"url": "/_projects/protostar.md",
+		"url": "/projects/protostar.md",
 		"date": "Jan 2016",
 		"tags": ["exploitation","challenges"]
 	},
