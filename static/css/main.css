@@ -49,7 +49,8 @@ h3 {
 
 a, a:link, a:active {
     text-decoration: none;
-    color: #CC756C;
+    color: #b9e4e3;
+    /*color: #CC756C; #light red*/ 
 }
 
 a:hover {
@@ -146,7 +147,7 @@ div.col-sm-3 {
 
 div.col-sm-3 strong {
         font-size: 16px;
-        color: #CC756C;
+        color: #b9e4e3;
         font-weight: bold;
 }
 
