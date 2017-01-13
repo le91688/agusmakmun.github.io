@@ -16,12 +16,12 @@ comments: true
 ### INSTALL 
 NOTE: the following assumes a fresh EC2 instance with ubuntu server 14.04
 Install and setup VNC and a desktop environment. 
-{% highlight shell %}
+```bash
 apt-get install vnc4server
 apt-get install xfce
-{% endhighlight %}
+```
 Configure your vnc startup script
-{% highlight shell %}
+```bash
 sudo nano ~/.vnc/xtartup 
 ------------------------------ 
 #!/bin/sh
@@ -33,13 +33,13 @@ startxfce4 &
 sudo add-apt-repository ppa:guacamole/stable
 
 apt-get install guacamole-tomcat 
-{% endhighlight %}
+```
 
 For ssh / rdp support, install the following packages:
 
-{% highlight shell %}
+```bash
 apt-get install libguac-client-ssh0 libguac-client-rdp0
-{% endhighlight %}
+```
 
 you should now be able to hit http://localhost:8080/guacamole and get a login page
 
@@ -50,8 +50,9 @@ configure user-mapping.xml as follows. Please note, <authorize username/pass> ca
 vncpassword needs to match your vncserver password config, or VNC will fail to initialize. set vnc password with vncpasswd command
 port needs to be what the current running vnc session is listening on
 
-{% highlight shell %} 
+```bash
 sudo nano /etc/guacamole/user-mapping.xml
+
 
     <authorize username="user1" password="pass1">
         <protocol>vnc</protocol>
@@ -66,11 +67,12 @@ sudo nano /etc/guacamole/user-mapping.xml
         <param name="port">5901</param>
         <param name="password">vncpassword</param>
     </authorize>
-{% endhighlight %}
+```
+
 
 ### REVERSE PROXY SETUP
 this setting redirects all incoming port 80 traffic to port 8080 #once it hits your webserver. This is useful for accessing your guacamole server from work etc.
-{% highlight shell %}
+```bash
 sudo apt-get install apache2
 sudo aptitude install -y libapache2-mod-proxy-html libxml2-dev 
 
@@ -79,8 +81,8 @@ sudo a2enmod
 proxy proxy_ajp proxy_http rewrite deflate headers proxy_balancer proxy_connect proxy_html 
 #configure the following file as seen below
 sudo nano /etc/apache2/sites-available/000-default.conf
-{% endhighlight  %}
-{% highlight xml %}
+```
+```xml
 <VirtualHost *:80>
 
 # /guacamole settings
@@ -92,7 +94,7 @@ ProxyPassReverse /guacamole http://localhost:8080/guacamole
     Allow from all
 </Location>
 </VirtualHost> 
-{% endhighlight  %}
+```
  
 you should now be able to hit http://localhost/guacamole and get a login page
 now we just need to modify the Users
@@ -101,7 +103,7 @@ now we just need to modify the Users
 ### UPGRADE TO LATEST VERSION //OPTIONAL///
 
 stop services
-{% highlight shell  %}
+```bash
 service guacd stop
 service tomcat7 stop 
 
@@ -118,25 +120,25 @@ tar -xzf guacamole-server-0.9.9.tar.gz
 cd guacamole-server-0.9.9/
 
 ./configure --with-init-dir=/etc/init.d
-{% endhighlight  %}
+```
 
 if no errors occur, go to next step. If you get errors, youre likely missing a package
-{% highlight shell  %}
+```bash
 make
 
 make install
 
 update-rc.d guacd defaults
 ldconfig 
-{% endhighlight  %}
+```
 replace old guacamole web app with new
-{% highlight shell  %}
+```bash
 rm -r /var/lib/tomcat6/webapps/guacamole
 cp guacamole-0.9.9.war /var/lib/tomcat6/webapps/guacamole.war
-{% endhighlight  %}
+```
 start your services
-{% highlight shell  %}
+```bash
 service guacd start
 service tomcat6 restart 
-{% endhighlight  %}
+```
 you should now be able to access the login screen
