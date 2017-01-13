@@ -29,11 +29,12 @@ input#js-search__input {
     display: block;
     padding: 10px;
 }
-.search__result-date {
+/*.search__result-date {
     color: #BBB;
     position: absolute;
     right: 12px;
 }
+*/
 .search.is-active {
     opacity: 1;
     visibility: visible;
