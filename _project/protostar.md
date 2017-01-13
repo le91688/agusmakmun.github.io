@@ -5,13 +5,9 @@ slug: "protostar"
 ---
 protostar writeups
 
-# protostar
-protostar sploits and solutions 
-https://exploit-exercises.com/protostar
+NOTE: write ups in progress!
 
-NOTE: write ups in progress. Adding python exploit poc's to each excercise for practice!
-
-##INDEX
+#INDEX
 
 | Challenge                        |
 | :------------------------------- | 
@@ -33,7 +29,8 @@ NOTE: write ups in progress. Adding python exploit poc's to each excercise for p
 |[net2](#net2)|
 
 
-## Stack0
+# Stack0
+
 ### Source Code:
 
 ```C
@@ -81,7 +78,8 @@ cproc = Popen("./stack0", stdin=PIPE, stdout=PIPE)
 print cproc.communicate(input)[0]   
 ```
 
-## Stack1
+# Stack1
+
 ### Source Code:
 
 ```C
