@@ -258,7 +258,7 @@ objdump -d ./stack2 | ./stack2.s
 
 after reviewing your assembly, you can see the following
 
-```asm
+```nasm
 08048424 <win>:
  8048424:	55                   	push   %ebp
  8048425:	89 e5                	mov    %esp,%ebp
@@ -475,7 +475,7 @@ $ gdb ./stack5
 Reading symbols from ./stack5...done.
 gdb$ disas main
 ```
-```asm
+```nasm
 Dump of assembler code for function main:
    0x080483c4 <+0>:     push   %ebp
    0x080483c5 <+1>:     mov    %esp,%ebp
@@ -679,7 +679,7 @@ l:~/workspace/proto (master) $ ulimit -s unlimited
 l:~/workspace/proto (master) $ gdb ./stack6      
 gdb$ disas getpath
 ```
-```asm
+```nasm
   Dump of assembler code for function getpath:
    0x08048484 <+0>:     push   ebp
    0x08048485 <+1>:     mov    ebp,esp
@@ -851,7 +851,7 @@ A ROP gadget is basically just the tail end of a function that ends in ret.
 
 EXAMPLE:
 
-```asm
+```nasm
 pop $eax;
 ret;
 ```
@@ -939,7 +939,7 @@ To perform our system call we do the following:
 
 This means we need our registers set up like this
 
-```asm
+```nasm
 EAX = 0xb (sys call value for execve)
 EBX = ptr to "/bin/sh"
 ECX = 0x0
@@ -986,7 +986,7 @@ le91688:~/workspace/proto$ grep -w "xor eax, eax" LIBCgadgets
 
 Using this i'm able to find the following useful gadgets:
 
-```asm
+```nasm
 0x000f9482  : pop ecx ; pop ebx ; ret       #load values from stack to ECX, EBX
 0x00001aa2  : pop edx ; ret                 #load value in EDX
 0x001454c6  : add eax, 0xb ; ret            #add 0xb to EAX
@@ -1043,7 +1043,7 @@ So we have can see that our library libc-2.19.so is loaded in memory starting at
 We are starting to get a pile of info, but I promise it will all come together soon, beautifully!
 Next, lets design our stack:
 
-```asm
+```nasm
 higher memory
 +----------------------+
 |   INT0x80            |  syscall should be "execve( "/bin/sh",0,0)
@@ -1529,7 +1529,7 @@ First heap exercise
 
 So we check out the objdump and see the following things of interest
 
-```asm
+```nasm
 08048464 <winner>:                              <- location we need to jump to
  8048464:	55                   	push   %ebp
  8048465:	89 e5                	mov    %esp,%ebp
@@ -1644,7 +1644,7 @@ int main(int argc, char **argv)
 
 So we see we're strcpying some data into internet.name which are both allocated 8 bytes. Our heap looks something like this
 
-```asm
+```nasm
 lower addr
 +----------------------+\
 |    i1.priority =1    |  \   
