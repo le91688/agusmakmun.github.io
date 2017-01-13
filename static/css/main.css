@@ -4,7 +4,7 @@
 body {
     font-family: monospace;
  
-    background-color: #031927;
+    background-color: #031D2D;
     font-size: 18px;
     line-height: 1.5em;
     color: #C8E0F4;
@@ -29,7 +29,7 @@ span.time, span.categories {
 
 h1 {
     font-weight: normal;
-    color: #BA1200;
+    color: #BA4437;
     margin-bottom: 10px;
     font-size: 25px;
 }
