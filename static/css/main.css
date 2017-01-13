@@ -38,7 +38,7 @@ h2 {
     font-weight: normal;
     margin-bottom: 5px;
     color: #b9e4e3; 
-    /*color: #d8a7a2; #light red*/ 
+    /*color: #CC756C; #light red*/ 
 }
         
 h3 {
@@ -152,7 +152,8 @@ div.col-sm-3 strong {
 
 div.col-sm-3 div#about {
         margin-top: 10px;
-		color: #CC756C;
+        color: #b9e4e3;
+		/*color: #CC756C;*/
 }
 
 div.col-sm-3 img#about {
