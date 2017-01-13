@@ -16,11 +16,14 @@ comments: true
 ### INSTALL 
 NOTE: the following assumes a fresh EC2 instance with ubuntu server 14.04
 Install and setup VNC and a desktop environment. 
+
 ```bash
 apt-get install vnc4server
 apt-get install xfce
 ```
+
 Configure your vnc startup script
+
 ```bash
 sudo nano ~/.vnc/xtartup 
 ------------------------------ 
@@ -69,9 +72,9 @@ sudo nano /etc/guacamole/user-mapping.xml
     </authorize>
 ```
 
-
 ### REVERSE PROXY SETUP
 this setting redirects all incoming port 80 traffic to port 8080 #once it hits your webserver. This is useful for accessing your guacamole server from work etc.
+
 ```bash
 sudo apt-get install apache2
 sudo aptitude install -y libapache2-mod-proxy-html libxml2-dev 
@@ -102,28 +105,34 @@ now we just need to modify the Users
 
 ### UPGRADE TO LATEST VERSION //OPTIONAL///
 
-stop services
+
+
 ```bash
+#stop services
 service guacd stop
 service tomcat7 stop 
 
+#download files
 wget -O guacamole-0.9.9.war http://downloads.sourceforge.net/project/guacamole/current/binary/guacamole-0.9.9.war
 wget -O guacamole-server-0.9.9.tar.gz http://downloads.sourceforge.net/project/guacamole/current/source/guacamole-server-0.9.9.tar.gz
 
+#install optional libs
+sudo apt-get install make libcairo2-dev libpng12-dev freerdp-x11 libssh2-1 libvncserver-dev libfreerdp-dev libvorbis-dev libssl0.9.8 gcc libssh-dev libpulse-dev gcc libossp-uuid-dev
 
-sudo apt-get install make libcairo2-dev libpng12-dev freerdp-x11 
-libssh2-1 libvncserver-dev libfreerdp-dev libvorbis-dev libssl0.9.8 
-gcc libssh-dev libpulse-dev gcc libossp-uuid-dev
-
+#untar
 tar -xzf guacamole-server-0.9.9.tar.gz
 
+#navigate to the directory
 cd guacamole-server-0.9.9/
 
+#config
 ./configure --with-init-dir=/etc/init.d
 ```
 
-if no errors occur, go to next step. If you get errors, youre likely missing a package
+If no errors occur, go to next step. If you get errors, youre likely missing a package
+
 ```bash
+#run make install
 make
 
 make install
@@ -131,14 +140,18 @@ make install
 update-rc.d guacd defaults
 ldconfig 
 ```
-replace old guacamole web app with new
+
+Replace old guacamole web app with new
+
 ```bash
 rm -r /var/lib/tomcat6/webapps/guacamole
 cp guacamole-0.9.9.war /var/lib/tomcat6/webapps/guacamole.war
 ```
-start your services
+
+Start your services
+
 ```bash
 service guacd start
 service tomcat6 restart 
 ```
-you should now be able to access the login screen
+You should now be able to access the login screen.
