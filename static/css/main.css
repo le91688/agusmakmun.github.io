@@ -7,7 +7,7 @@ body {
     background-color: #34344A;
     font-size: 18px;
     line-height: 1.5em;
-    color: #787A96;
+    color: #8C92B0;
     font-weight: 300;
 }
 hr {
@@ -29,7 +29,7 @@ span.time, span.categories {
 
 h1 {
     font-weight: normal;
-    color: #70965E;
+    color: #81A366;
     margin-bottom: 10px;
     font-size: 25px;
 }
@@ -37,13 +37,13 @@ h1 {
 h2 {
     font-weight: normal;
     margin-bottom: 5px;
-    color: #767D71;
+    color: #DCADAD;
 }
         
 h3 {
     font-weight: normal;
     margin-bottom: 5px;
-    color: #77965E;
+    color: #81A366;
 }
 
 a, a:link, a:active {
