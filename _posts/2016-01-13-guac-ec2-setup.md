@@ -13,8 +13,8 @@ comments: true
 ---
 
 
-## INSTALL 
-### the following assumes a fresh EC2 instance with ubuntu server 14.04
+### INSTALL 
+NOTE: the following assumes a fresh EC2 instance with ubuntu server 14.04
 Install and setup VNC and a desktop environment. 
 {% highlight shell %}
 apt-get install vnc4server
@@ -43,7 +43,7 @@ apt-get install libguac-client-ssh0 libguac-client-rdp0
 
 you should now be able to hit http://localhost:8080/guacamole and get a login page
 
-## SETUP
+### SETUP
 
 configure user-mapping.xml as follows. Please note, <authorize username/pass> can be anything you want, and is only used within guacamole app. 
 
@@ -98,7 +98,7 @@ you should now be able to hit http://localhost/guacamole and get a login page
 now we just need to modify the Users
 
 
-## UPGRADE TO LATEST VERSION //OPTIONAL///
+### UPGRADE TO LATEST VERSION //OPTIONAL///
 
 stop services
 {% highlight shell  %}
