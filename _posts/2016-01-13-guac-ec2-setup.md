@@ -20,7 +20,7 @@ Install and setup VNC and a desktop environment.
 apt-get install vnc4server
 apt-get install xfce
 {% endhighlight %}
-configure your vnc startup script
+Configure your vnc startup script
 {% highlight shell %}
 sudo nano ~/.vnc/xtartup 
 ------------------------------ 
@@ -35,7 +35,7 @@ sudo add-apt-repository ppa:guacamole/stable
 apt-get install guacamole-tomcat 
 {% endhighlight %}
 
-for ssh / rdp install the following
+For ssh / rdp support, install the following packages:
 
 {% highlight shell %}
 apt-get install libguac-client-ssh0 libguac-client-rdp0
@@ -43,12 +43,11 @@ apt-get install libguac-client-ssh0 libguac-client-rdp0
 
 you should now be able to hit http://localhost:8080/guacamole and get a login page
 
-##SETUP
+## SETUP
 
 configure user-mapping.xml as follows. Please note, <authorize username/pass> can be anything you want, and is only used within guacamole app. 
 
 vncpassword needs to match your vncserver password config, or VNC will fail to initialize. set vnc password with vncpasswd command
-
 port needs to be what the current running vnc session is listening on
 
 {% highlight shell %} 
@@ -69,7 +68,7 @@ sudo nano /etc/guacamole/user-mapping.xml
     </authorize>
 {% endhighlight %}
 
-###REVERSE PROXY SETUP
+### REVERSE PROXY SETUP
 this setting redirects all incoming port 80 traffic to port 8080 #once it hits your webserver. This is useful for accessing your guacamole server from work etc.
 {% highlight shell %}
 sudo apt-get install apache2
@@ -99,7 +98,7 @@ you should now be able to hit http://localhost/guacamole and get a login page
 now we just need to modify the Users
 
 
-##UPGRADE TO LATEST VERSION //OPTIONAL///
+## UPGRADE TO LATEST VERSION //OPTIONAL///
 
 stop services
 {% highlight shell  %}
