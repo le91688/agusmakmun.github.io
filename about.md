@@ -4,6 +4,6 @@ title: About
 permalink: /about/
 ---
 
-I am freelance developer. Currently doing more in backend, actually in Python and Django.
+Someday hope to have a career in VR/exploit dev. Learning and sharing info on my way.
 
-email: agus[at]python.web.id
+email: le91688[at]gmail.com
