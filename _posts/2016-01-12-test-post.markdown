@@ -14,13 +14,6 @@ serie: learn
 comments: true
 ---
 
-
-```c
-testing a codeblock
-```
-
-### Fun with ROP Chains
-
 I wanted to post a walkthrough of building a rop chain exploit for anyone trying to learn out there. There are some very good resources out there, but I wanted to try to combine them in an easy to follow manner to do a basic rop chain exploit. I used protostar stack7 binary for this example.
 
 

