@@ -4,10 +4,10 @@
 body {
     font-family: monospace;
  
-    background-color: #1a1221;
+    background-color: {{ site.colors.bg}};
     font-size: 18px;
     line-height: 1.5em;
-    color: #ffffcc;
+    color: {{ site.colors.fg}};
     font-weight: 300;
 }
 hr {
@@ -29,7 +29,7 @@ span.time, span.categories {
 
 h1 {
     font-weight: normal;
-    color: #ccff66;
+    color: {{ site.colors.h1}};
     margin-bottom: 10px;
     font-size: 25px;
 }
@@ -37,13 +37,13 @@ h1 {
 h2 {
     font-weight: normal;
     margin-bottom: 5px;
-    color: #9999ff;
+    color: {{ site.colors.h2}};
 }
         
 h3 {
     font-weight: normal;
     margin-bottom: 5px;
-    color: #ccccff;
+    color: {{ site.colors.h3}};
 }
 
 a, a:link, a:active {
