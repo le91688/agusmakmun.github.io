@@ -34,14 +34,6 @@ urls:
     - text: XML Feed
       url: /feed.xml
 
-colors:
-  bg: '#6690B2'
-  fg: '#FCFFB8'
-  h1: '#FFA29E'
-  h2: '#B2605D'
-  h3: '#FAFFEA'
-
-
 url: "https://le91688.github.io"
 baseurl: ""
 paginate: 20
