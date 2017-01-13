@@ -72,7 +72,8 @@ So, our goal is to creat a system call to execve(x,y,z).
 
 
 ### Recommended reading:
-https://www.tutorialspoint.com/assembly_programming/assembly_system_calls.htm
+[assembly system calls](https://www.tutorialspoint.com/assembly_programming/assembly_system_calls.htm)
+
 
 We see that during a system call, EAX is set to a specific value and then INT 0x80(interrupt) to call the kernel. So we need to figure out what value we need to load into EAX for execve.
 
@@ -104,7 +105,8 @@ le91688:/usr/include/asm $ cat unistd_32.h | grep "execve"
 So we see that 11 or 0xb is our value we want EAX to be when we call our interrupt. Now that we have our system call figured out, we need to figure out what parameters to pass to it, and what registers to use.
 
 #### Recommended Reading: 
-http://hackoftheday.securitytube.net/2013/04/demystifying-execve-shellcode-stack.html
+[Demistifying execve](http://hackoftheday.securitytube.net/2013/04/demystifying-execve-shellcode-stack.html)
+
 
 Lets check out EXECVE by looking at the man page:
 
@@ -321,3 +323,12 @@ LIBCgadgets             format0          format3    heap4.asm    stack0.s       
 whoami
 ubuntu
 ```
+
+###Resources:
+
+[CodeArcana ROP](http://codearcana.com/posts/2013/05/28/introduction-to-return-oriented-programming-rop.html)
+[Exploit DB ROP guide](https://www.exploit-db.com/docs/28479.pdf)
+[System Calls](https://www.tutorialspoint.com/assembly_programming/assembly_system_calls.htm)
+[Rotlogix arm exploit](http://rotlogix.com/2016/05/03/arm-exploit-exercises/)
+
+
