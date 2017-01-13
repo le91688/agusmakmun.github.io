@@ -1,4 +1,4 @@
-title: ShadeSec
+title: Posts
 description: Hacking/exploit dev/linux/etc
 author: L E
 github: https://github.com/le91688
@@ -17,8 +17,6 @@ collections:
 social:
     - icon: fa-twitter
       link: "https://twitter.com/espnshade"
-    - icon: fa-stack-exchange
-      link: "#"
 
 share:
   twitter_username: espnshade
