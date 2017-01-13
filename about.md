@@ -4,6 +4,6 @@ title: About
 permalink: /about/
 ---
 
-VR/exploit dev/programming/web hacking. Learning and sharing info on my way.
+VR/exploit dev/programming/web hacking
 
 email: le91688[at]gmail.com
