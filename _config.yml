@@ -30,7 +30,7 @@ urls:
     - text: Github
       url: https://github.com/le91688
 
-url: "https://le91688.github.io"
+url: "https://www.shadesec.com"
 baseurl: ""
 paginate: 20
 per_page: 20
