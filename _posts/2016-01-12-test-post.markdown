@@ -57,7 +57,7 @@ We can see this is a pretty straightforward overflow via gets() , with some limi
 
 A ROP gadget is basically just the tail end of a function that ends in ret. EXAMPLE:
 
-```asm
+```nasm
 pop $eax;
 ret;
 ```
@@ -134,9 +134,11 @@ The second is the list of args to the program, and since we are not running /bin
 
 #### envp[]
 
-the third arg is for environment options, again we'll set this to a null byte Our call should look like this:
+The third arg is for environment options, again we'll set this to a null byte Our call should look like this:
 
+```
 execve('/bin/sh',0,0)
+```
 
 So now we know how we need to call execve, now we need to figure out how to do it.
 
@@ -146,13 +148,15 @@ Put the system call number in the EAX register.
 Store the arguments to the system call in the registers EBX, ECX, etc.
 This means we need our registers set up like this
 
+```nasm
 EAX = 0xb (sys call value for execve)
 EBX = ptr to "/bin/sh"
 ECX = 0x0
 EDX = 0x0
-Now we need to go gather some gadgets to make the magic happen. I used ROPgadget, you can grab it here:
+```
 
-https://github.com/JonathanSalwan/ROPgadget
+Now we need to go gather some gadgets to make the magic happen. I used ROPgadget, you can grab it [here](https://github.com/JonathanSalwan/ROPgadget).
+
 
 NOTE: i realize i'm not using this tool to its fullest potential, but I will show how I was able to grab gadgets, if you have any tips feel free to comment! I also saw the --ROPchain switch, but thats no fun ;)
 
@@ -190,7 +194,7 @@ le91688:~/workspace/proto$ grep -w "xor eax, eax" LIBCgadgets
 
 Using this i'm able to find the following useful gadgets:
 
-```asm
+```nasm
 0x000f9482  : pop ecx ; pop ebx ; ret       #load values from stack to ECX, EBX
 0x00001aa2  : pop edx ; ret                 #load value in EDX
 0x001454c6  : add eax, 0xb ; ret            #add 0xb to EAX
@@ -246,7 +250,7 @@ So we have can see that our library libc-2.19.so is loaded in memory starting at
 
 We are starting to get a pile of info, but I promise it will all come together soon, beautifully! Next, lets design our stack:
 
-```asm
+```nasm
 //higher memory
 +----------------------+
 |   INT0x80            |  syscall should be "execve( "/bin/sh",0,0)
@@ -327,8 +331,11 @@ ubuntu
 ###Resources:
 
 [CodeArcana ROP](http://codearcana.com/posts/2013/05/28/introduction-to-return-oriented-programming-rop.html)
+
 [Exploit DB ROP guide](https://www.exploit-db.com/docs/28479.pdf)
+
 [System Calls](https://www.tutorialspoint.com/assembly_programming/assembly_system_calls.htm)
+
 [Rotlogix arm exploit](http://rotlogix.com/2016/05/03/arm-exploit-exercises/)
 
 

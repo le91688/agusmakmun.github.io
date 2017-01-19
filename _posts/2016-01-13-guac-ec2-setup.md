@@ -44,7 +44,7 @@ For ssh / rdp support, install the following packages:
 apt-get install libguac-client-ssh0 libguac-client-rdp0
 ```
 
-you should now be able to hit http://localhost:8080/guacamole and get a login page
+You should now be able to hit http://localhost:8080/guacamole and get a login page
 
 ### SETUP
 
@@ -55,8 +55,8 @@ port needs to be what the current running vnc session is listening on
 
 ```bash
 sudo nano /etc/guacamole/user-mapping.xml
-
-
+```
+```xml
     <authorize username="user1" password="pass1">
         <protocol>vnc</protocol>
         <param name="hostname">localhost</param>
@@ -99,7 +99,7 @@ ProxyPassReverse /guacamole http://localhost:8080/guacamole
 </VirtualHost> 
 ```
  
-you should now be able to hit http://localhost/guacamole and get a login page
+You should now be able to hit http://localhost/guacamole and get a login page...
 now we just need to modify the Users
 
 
@@ -129,7 +129,7 @@ cd guacamole-server-0.9.9/
 ./configure --with-init-dir=/etc/init.d
 ```
 
-If no errors occur, go to next step. If you get errors, youre likely missing a package
+If no errors occur, go to next step. If you get errors, youre likely missing a package, install as required.
 
 ```bash
 #run make install
