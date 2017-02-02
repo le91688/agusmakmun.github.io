@@ -2089,11 +2089,13 @@ So now we know where our printf vuln is. The next step is to check out the call 
 Syslog is also writing to /var/log/syslog, so we can use this to help us build our format string attack.
 
 we give the following input with netcat
+
 ```bash
 [final1] $ username AAAAAA %p %p %p %p %p %p %p %p
 [final1] $ login AAAAAA %p %p %p %p %p %p %p %p
 login failed
 ```
+
 and get the following output in our syslog
 
 ```bash
@@ -2155,7 +2157,8 @@ For this challenge, i wanted to try something new, so I overwrote the GOT (globa
 As you can see this jumps to the location at 0x804a170
 We will overwrite this with a location of some shellcode. Since we're going to jump to a location on the stack, make sure ASLR is off!
 
-We need to build an input that looks like this 
+We need to build an input that looks like this
+
 ```xml
   <address><address+2>%<x>x%<offset>$hn%<y>x%<offset+1>$hn
 ```
