@@ -521,6 +521,7 @@ gdb$
 
 So now we have our locations and our offset. Time to craft an input. I used http://shell-storm.org/shellcode/ to find some shellcode to use. I settled on http://shell-storm.org/shellcode/files/shellcode-811.php for this example, which is a basic 28byte execve(bin/sh) command. 
 
+
 For our input, we'll put our shellcode + filler + target return location
 
 ```bash
@@ -674,6 +675,7 @@ int main(int argc, char **argv)
 ### Plan:
 So this program basically uses gets to grab an input for buffer, then uses builtin_return_address(0) to get the return address of the current function and prevents it from returning to any address in the 0xbf------ range.(likely where our buffer is to prevent shellcode execution). So in this one, we will go a different route and use Return to libc.
 
+
 First we need to find our offset 
 
 ```bash
@@ -771,6 +773,7 @@ gdb$ quit
 
 So now that we have our offset, and the locations in memory we can form the following payload by setting up the stack like follows:
 
+
 FILLER + SYSTEM function call + Return value for System function call+ ARG FOR SYSTEM function call
 For mine, i wanted it to exit cleanly after the shell, so i made SYSTEM's return value the function call for EXIT.
 
@@ -841,6 +844,7 @@ int main(int argc, char **argv)
 ### Plan:
 So for this challenge, its basically the same as stack6, but strdup is called. This function allocates space on the heap and copies a string to it. Knowing this, stack7 could be solved by predicting the heap location and jumping there to execute shellcode, but I wanted to experiment with chaining ROP gadgets. I will do my best to explain the whole process so that it hopefully proves useful for someone out there trying to learn!
 
+
 ###Resources:
 
 [CodeArcana ROP](http://codearcana.com/posts/2013/05/28/introduction-to-return-oriented-programming-rop.html)
@@ -848,10 +852,13 @@ So for this challenge, its basically the same as stack6, but strdup is called. T
 [System Calls](https://www.tutorialspoint.com/assembly_programming/assembly_system_calls.htm)
 [Rotlogix arm exploit](http://rotlogix.com/2016/05/03/arm-exploit-exercises/)
 
+
 ### ROP Gadgets---- What exactly are they?
 A ROP gadget is basically just the tail end of a function that ends in ret. 
 
+
 EXAMPLE:
+
 
 ```nasm
 pop $eax;
@@ -861,16 +868,21 @@ ret;
 ### What can we do with them? 
 We can piece together a bunch of ROP gadgets, along with values on our stack to perform just about anything. In my example we will be executing a system call to execve with specific parameters in order to get a shell. After we design our stack with the proper values and rop gadgets, we will be getting a shell via execve.
 
+
 First things first, we will find our offset and what input we need to overwrite our EIP so that we can jump to a location in memory.
 Luckily, stack7 is nearly identical to stack6, so we can take the offset from there ( See stack6 write up for walkthrough!)
 So we have our offset(0x50). Now it's time to formulate a plan and design our stack.
 
+
 So, our goal is to creat a system call to execve(x,y,z). 
+
 
 Recommended reading: https://www.tutorialspoint.com/assembly_programming/assembly_system_calls.htm 
 
+
 We see that during a system call, EAX is set to a specific value and then INT 0x80(interrupt) to call the kernel. 
 So we need to figure out what value we need to load into EAX for execve.
+
 
 Notice in the source code, we have 
 
@@ -880,6 +892,7 @@ Notice in the source code, we have
 
 unistd.h is the header file that provides access to the OS API. This means we can examine this header file, and figure out
 what value will get us EXECVE.
+
 
 I got snagged here for a bit. I did these challenges on a 64 bit system, so I had a couple of unistd.h's .
 
@@ -901,8 +914,10 @@ le91688:/usr/include/asm $ cat unistd_32.h | grep "execve"
 
 So we see that 11 or 0xb is our value we want EAX to be when we call our interrupt.  Now that we have our system call figured out, we need to figure out what parameters to pass to it, and what registers to use.
 
+
 ### Recommended Reading:
 [Demistifying execve](http://hackoftheday.securitytube.net/2013/04/demystifying-execve-shellcode-stack.html)
+
 
 Lets check out EXECVE by looking at the man page:
 
@@ -935,9 +950,11 @@ execve('/bin/sh',0,0)
 
 So now we know how we need to call execve, now we need to figure out how to do it.
 
+
 To perform our system call we do the following:
 * Put the system call number in the EAX register.
 * Store the arguments to the system call in the registers EBX, ECX, etc.
+
 
 This means we need our registers set up like this
 
@@ -952,6 +969,7 @@ Now we need to go gather some gadgets to make the magic happen.
 I used ROPgadget, you can grab it [here](https://github.com/JonathanSalwan/ROPgadget).
 
 NOTE: i realize i'm not using this tool to its fullest potential, but I will show how I was able to grab gadgets, if you have any tips feel free to comment!  I also saw the --ROPchain switch, but thats no fun ;)
+
 
 At first, I tried running ROPgadget on the binary ( ./stack7) itself, and only found ~70 gadgets, but nothing useful.  After some professional help (thanks @rotlogix) , I learned that you need to run it on the library itself.
 We need to find what library is being loaded in memory at runtime:
@@ -998,6 +1016,7 @@ Using this i'm able to find the following useful gadgets:
 
 Now, the memory values for each gadget are the offset within the loaded library, so we need to get the base address of the library when its loaded.
 
+
 Warning: GDB info sharedlibrary is not a good way to do this and will lead to anger and hatred. Please dont ask me how i know. Instead use the following method. We will also grab the location of "bin/sh" in memory, as done in stack6.
 
 ```bash
@@ -1042,8 +1061,10 @@ fffdd000-ffffe000 rwxp 00000000 00:00 0
 
 So we have can see that our library libc-2.19.so is loaded in memory starting at 0x5558e000 and our binsh pointer value needs to be 0x556ee84c
 
+
 We are starting to get a pile of info, but I promise it will all come together soon, beautifully!
 Next, lets design our stack:
+
 
 ```nasm
 higher memory
@@ -1719,6 +1740,7 @@ Starting program: /home/ubuntu/workspace/exploit-exercises/protostar/binaries/he
 Now we just have to figure out how we want to use this. We can overwrite the i2.name pointer to our stack, and then strcpy winner's location to that address, and when we return we can jump to it, but we need to make sure ASLR is off for this.
 ### winning command:
 
+
 ```bash
                                #ESP on ret of main                       #location of win
 run $(python -c "print 'a'*20+'\x9c\xd0\xff\xff'") $(python -c "print '\x94\x84\x04\x08'")
@@ -1870,6 +1892,7 @@ int main(int argc, char **argv, char **envp)
 
 ### Walkthrough:
 
+
 This challenge is a simple overflow, but this time, we need to debug a "remote" program. 
 So basically the trick to this, is we attach to the running process 
 
@@ -1885,6 +1908,7 @@ Reading symbols from /lib/ld-linux.so.2...(no debugging symbols found)...done.
 0xf7fd8be9 in __kernel_vsyscall ()
 gdb$ 
 ```
+
 Now, if we try to send some data with netcat or python, we'll run into some issues. GDB is attached to the parent process which is currently a systemcall that provides our socket. When data is sent to the port, it will spawn a child process of our target binary and we need to debug that. We need to set a few things in gdb to make this work!
 
 ```bash
@@ -1893,6 +1917,7 @@ set detach-on-fork off      #stay attached to both processes when we fork
 ```
 Now that we have set this up, we can use python to send some data and see useful data in gdb. I decided to just do a ret2libc rop for this challenge to get a shell. (if you need to know how this is done, check out [Stack6](#stack6) ;)
 Check out the python exploit below---
+
 
 ### Python exploit:
 
@@ -2035,7 +2060,9 @@ int main(int argc, char **argv, char **envp)
 
 So this exercise is a "remote blind format string". Looking at the source, it's not apparent that there is any format string vuln.  I started by sending some input to see what the program does.  If you give the input "username x" , it sets the username var to "x". Then when you do "login x" , it calls the logit function, which does an snprintf call, and a syslog call. 
 
-before proceeding, if you are new to format string vulns , http://codearcana.com/posts/2013/05/02/introduction-to-format-string-exploits.html is a GREAT resource and helped me alot! Please read and understand before continuing!
+before proceeding, if you are new to format string vulns 
+[CodeArcana](http://codearcana.com/posts/2013/05/02/introduction-to-format-string-exploits.html) is a GREAT resource and helped me alot!
+Please read and understand before continuing!
 
 I started by throwing some input to test for format string vulns.
 
@@ -2082,11 +2109,15 @@ gdb$
 
 We can see the segfault happened in vfprintf. 
 
+
 Syslog calls vsyslog_chk which then calls vfprintf.
+
 
 So now we know where our printf vuln is. The next step is to check out the call stack at the vfprintf call by setting a breakpoint there.
 
+
 Syslog is also writing to /var/log/syslog, so we can use this to help us build our format string attack.
+
 
 we give the following input with netcat
 
